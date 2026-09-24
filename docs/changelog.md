@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased
+
+### Same results as the R packages
+
+`scTenifoldNet` and `scTenifoldKnk` now give the same results as the R
+packages scTenifoldNet 1.4.3 and scTenifoldKnk 1.1.4 with their default
+settings and `seed = 1`.
+
+- **Random numbers**: cells are subsampled and the tensor decomposition is
+  initialized with a port of R's generator (`RRandom`), so `random_state`
+  means the same as `seed` in R. The default is now `1` (was `42`).
+- **PC networks** are exact, computed as `pcNet` in R from one
+  eigendecomposition per network, instead of a randomized SVD per gene.
+  Genes that are constant in the sampled cells get no edges; `n_comp = 2`
+  is allowed. `make_networks` gains `prior_network`.
+- **Tensor decomposition** defaults to `method="cp_als"`, a port of the R
+  CP-ALS; tensorly methods are still available through `method`. The
+  default `tol` is `1e-5` (was `1e-6`).
+- **Differential regulation** selects the Box-Cox power as
+  `MASS::boxcox`, standardizes with the sample standard deviation, and
+  sets the p-value of genes whose distance is at the level of
+  floating-point noise to 1 (warning if that applies to every gene).
+  Results are sorted stably.
+- **QC** detects outlier cells with the hinges of `boxplot.stats` and keeps
+  the input gene order.
+- **scTenifoldNet** uses `K = 3` in the tensor decomposition, and keeps
+  the self-loops in `tensor_dict` (they are symmetrized for the alignment
+  only, as in R).
+- **scTenifoldKnk** normalizes to CPM after QC and no longer adds
+  `min_exp_avg`/`min_exp_sum` filters; it uses `q = 0.9`, `K = 3` and
+  `n_decimal = 3`, and warns when the knocked-out genes have no outgoing
+  edges.
+
 ## 0.4.0
 
 ### Web UI

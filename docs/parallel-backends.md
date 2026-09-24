@@ -43,10 +43,10 @@ result = compare_networks(
 
 ## Reproducibility
 
-All backends share the same ``random_state`` propagated through
-``randomized_svd``. The cell-subsample RNG is also seeded from
-``random_state``, so identical seeds produce identical networks
-regardless of backend, modulo BLAS-level non-determinism in the SVD.
+The cells of every network are drawn up front from ``random_state``
+(with R's random number generator, so seeds match ``set.seed`` in R),
+and the networks themselves are computed exactly. Identical seeds
+therefore produce identical networks regardless of backend.
 
 ## Deprecated Alias
 
