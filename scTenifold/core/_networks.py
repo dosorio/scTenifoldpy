@@ -688,10 +688,12 @@ def d_regulation(data: pd.DataFrame,
     if "df" not in chi2_kws:
         chi2_kws["df"] = 1
 
-    # Box-Cox power; the distances are left as they are if it cannot be found
+    # Box-Cox power; the distances are left as they are if it cannot be found.
+    # With a negative power, zero distances give 1 / inf = 0, as in R.
     try:
         bc_lambda = boxcox_kws["lmbda"] if "lmbda" in boxcox_kws else _boxcox_lambda(d_metrics)
-        t_d_metrics = 1 / (d_metrics ** bc_lambda) if bc_lambda < 0 else d_metrics ** bc_lambda
+        with np.errstate(divide="ignore"):
+            t_d_metrics = 1 / (d_metrics ** bc_lambda) if bc_lambda < 0 else d_metrics ** bc_lambda
     except ValueError:
         t_d_metrics = d_metrics
 

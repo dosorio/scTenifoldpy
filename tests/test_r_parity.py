@@ -3,9 +3,13 @@
 The reference values were computed with R 4.5 (scTenifoldNet 1.4.3,
 scTenifoldKnk 1.1.4, MASS 7.3-65).
 """
+import warnings
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
+import yaml
 
 from scTenifold import scTenifoldKnk, scTenifoldNet
 from scTenifold.core._QC import _fivenum, sc_QC
@@ -134,3 +138,24 @@ def test_pipeline_defaults_match_r():
     # User values override the defaults, which are kept for the other keys
     sc = scTenifoldKnk(pd.DataFrame(), td_kws={"max_iter": 10})
     assert sc.td_kws == {"K": 3, "n_decimal": 3, "max_iter": 10}
+
+
+def test_d_regulation_negative_power_with_zero_distances():
+    data = pd.DataFrame([[0.0, 0.0], [1.0, 1.0], [0.5, 0.2], [0.0, 0.0], [3.0, 3.0], [0.1, 0.9]],
+                        index=["X_g1", "X_g2", "X_g3", "Y_g1", "Y_g2", "Y_g3"])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        result = d_regulation(data, boxcox_kws={"lmbda": -0.5}, verbosity=0).set_index("Gene")
+    # 1 / (0 ^ -0.5) is 0, as in R
+    assert result.loc["g1", "boxcox-transformed distance"] == 0
+    assert np.isfinite(result[["boxcox-transformed distance", "Z", "FC", "p-value"]].to_numpy()).all()
+
+
+@pytest.mark.parametrize("cls, name", [(scTenifoldNet, "net_config.yml"), (scTenifoldKnk, "knk_config.yml")])
+def test_shipped_configs_use_pipeline_defaults(cls, name):
+    config = yaml.safe_load((Path(__file__).parents[1] / "config" / name).read_text())
+    defaults = cls.get_empty_config()
+    for step in ["nc_kws", "td_kws", "ma_kws"]:
+        for key, value in config[step].items():
+            if key in defaults[step] and key != "n_cpus":
+                assert value == defaults[step][key], (step, key)

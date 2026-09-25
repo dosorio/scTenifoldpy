@@ -32,6 +32,8 @@ settings and `seed = 1`.
   `min_exp_avg`/`min_exp_sum` filters; it uses `q = 0.9`, `K = 3` and
   `n_decimal = 3`, and warns when the knocked-out genes have no outgoing
   edges.
+- The shipped `config/net_config.yml` and `config/knk_config.yml` use these
+  defaults.
 
 ## 0.4.0
 
